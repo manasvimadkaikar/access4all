@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACCESS4ALL — Technology that adapts to you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12181C;
+    --surface:#1B232A;
+    --surface-2:#222C33;
+    --border:#2C363D;
+    --text:#F2EFE9;
+    --text-dim:#A9B4BC;
+
+    --blind:#E8A33D;
+    --blind-dim:#4a3c22;
+    --deaf:#4FB3A9;
+    --deaf-dim:#22403c;
+    --comm:#DD6B54;
+    --comm-dim:#432a24;
+    --dys:#8B7FD1;
+    --dys-dim:#302c4c;
+
+    --radius:4px;
+    --font-display:'Literata', Georgia, serif;
+    --font-body:'Atkinson Hyperlegible', system-ui, sans-serif;
+
+    --font-scale:1;
+    --letter-space:0em;
+  }
+
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:calc(16px * var(--font-scale));
+    letter-spacing:var(--letter-space);
+    line-height:1.55;
+  }
+  body.high-contrast{
+    --bg:#000000;
+    --surface:#000000;
+    --surface-2:#0A0A0A;
+    --border:#F2EFE9;
+    --text:#FFFFFF;
+    --text-dim:#DADADA;
+  }
+
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0 0 .4em 0; letter-spacing:normal;}
+  p{margin:0 0 1em 0;}
+  button{font-family:inherit; font-size:inherit;}
+  a{color:inherit;}
+
+  :focus-visible{outline:3px solid #fff; outline-offset:2px;}
+
+  .screen{display:none; min-height:100vh; padding:0 0 4rem 0;}
+  .screen.active{display:block;}
+
+  /* ---------- Top utility bar (present everywhere) ---------- */
+  .a11y-bar{
+    display:flex; align-items:center; gap:.5rem;
+    padding:.6rem 1.2rem;
+    border-bottom:1px solid var(--border);
+    background:var(--surface);
+    position:sticky; top:0; z-index:20;
+  }
+  .a11y-bar .spacer{flex:1;}
+  .a11y-btn{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:.4rem .7rem;
+    border-radius:var(--radius);
+    cursor:pointer;
+  }
+  .a11y-btn:hover{border-color:var(--text-dim);}
+  .brand-mini{font-family:var(--font-display); font-weight:600; font-size:1.05rem; margin-right:.5rem;}
+
+  /* ---------- Landing ---------- */
+  .hero{
+    max-width:760px;
+    padding:5rem 1.5rem 2rem 1.5rem;
+  }
+  .hero h1{font-size:clamp(2.4rem, 6vw, 3.6rem); line-height:1.05; max-width:12ch;}
+  .hero p.tagline{font-size:1.2rem; color:var(--text-dim); max-width:46ch;}
+
+  .mode-grid{
+    max-width:980px;
+    padding:1rem 1.5rem 3rem 1.5rem;
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:1rem;
+  }
+  @media (max-width:640px){ .mode-grid{grid-template-columns:1fr;} }
+
+  .mode-tile{
+    text-align:left;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:6px solid var(--tile-color, var(--text-dim));
+    border-radius:0 var(--radius) var(--radius) 0;
+    padding:1.4rem 1.5rem;
+    cursor:pointer;
+    color:var(--text);
+    transition:transform .15s ease, background .15s ease;
+    display:flex; gap:1rem; align-items:flex-start;
+  }
+  .mode-tile:hover{ transform:translateX(4px); background:var(--surface-2); }
+  .mode-tile svg{ flex-shrink:0; width:32px; height:32px; stroke:var(--tile-color); }
+  .mode-tile h3{font-size:1.15rem; margin-bottom:.25rem;}
+  .mode-tile p{font-size:.92rem; color:var(--text-dim); margin:0;}
+
+  .guest-note{
+    max-width:980px; padding:0 1.5rem;
+    font-size:.85rem; color:var(--text-dim);
+  }
+
+  /* ---------- Dashboard shell ---------- */
+  .dash-header{
+    display:flex; align-items:center; gap:1rem;
+    padding:1.6rem 1.5rem 1.2rem 1.5rem;
+    border-bottom:1px solid var(--border);
+  }
+  .dash-header .accent-bar{ width:6px; align-self:stretch; background:var(--mode-color); border-radius:3px; }
+  .dash-header h2{ font-size:1.6rem; }
+  .back-btn{
+    margin-left:auto;
+    background:none; border:1px solid var(--border); color:var(--text-dim);
+    padding:.5rem .9rem; border-radius:var(--radius); cursor:pointer;
+  }
+  .back-btn:hover{ color:var(--text); border-color:var(--text-dim); }
+
+  .panel-grid{
+    max-width:1080px;
+    padding:1.5rem;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:1rem;
+  }
+  @media (max-width:760px){ .panel-grid{grid-template-columns:1fr;} }
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:1.25rem 1.4rem;
+  }
+  .panel.wide{ grid-column:1/-1; }
+  .panel h3{ font-size:1.05rem; display:flex; align-items:center; gap:.5rem; }
+  .panel h3 .dot{ width:8px; height:8px; border-radius:50%; background:var(--mode-color); flex-shrink:0; }
+
+  textarea, input[type=text]{
+    width:100%;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:var(--radius);
+    padding:.6rem .7rem;
+    font-family:inherit;
+    font-size:1rem;
+    resize:vertical;
+  }
+
+  .action-btn{
+    background:var(--mode-color);
+    color:#12181C;
+    border:none;
+    font-weight:700;
+    padding:.65rem 1.1rem;
+    border-radius:var(--radius);
+    cursor:pointer;
+    margin-top:.6rem;
+  }
+  .action-btn:hover{ filter:brightness(1.08); }
+  .action-btn.secondary{
+    background:none;
+    border:1px solid var(--mode-color);
+    color:var(--mode-color);
+    font-weight:600;
+  }
+  .action-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .status-line{
+    font-size:.88rem; color:var(--text-dim); margin-top:.5rem; min-height:1.2em;
+  }
+
+  .transcript-box{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    min-height:110px;
+    max-height:220px;
+    overflow-y:auto;
+    padding:.8rem 1rem;
+    font-size:1.05rem;
+  }
+
+  .phrase-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:.6rem; margin-top:.6rem; }
+  .phrase-btn{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:.7rem .8rem;
+    border-radius:var(--radius);
+    cursor:pointer;
+    text-align:left;
+    font-size:.95rem;
+  }
+  .phrase-btn:hover{ border-color:var(--mode-color); }
+
+  .emergency-alert{
+    display:none;
+    background:#3a1414;
+    border:2px solid #E24C4C;
+    color:#ffdcdc;
+    padding:1rem 1.2rem;
+    border-radius:var(--radius);
+    margin-top:.8rem;
+    font-weight:700;
+  }
+  .emergency-alert.show{ display:block; }
+
+  select{
+    background:var(--surface-2);
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:.5rem;
+    font-family:inherit;
+  }
+
+  .focus-sentence{
+    font-family:var(--font-display);
+    font-size:1.6rem;
+    line-height:1.5;
+    min-height:4.5em;
+    display:flex; align-items:center;
+  }
+  .focus-controls{ display:flex; gap:.6rem; align-items:center; margin-top:.6rem; }
+  .word{ cursor:pointer; border-bottom:1px dashed var(--mode-color); }
+  .word:hover{ background:var(--mode-color); color:#12181C; }
+  .definition-box{
+    margin-top:.7rem; padding:.7rem 1rem; background:var(--surface-2);
+    border-radius:var(--radius); font-size:.95rem; display:none;
+  }
+  .definition-box.show{ display:block; }
+
+  video.cam-preview, canvas.cam-preview{
+    width:100%; max-width:340px; border-radius:var(--radius); border:1px solid var(--border);
+    background:#000;
+  }
+
+  code.inline{ background:var(--surface-2); padding:.1em .4em; border-radius:3px; font-size:.85em; }
+
+  footer.note{
+    max-width:1080px; margin:0 auto; padding:1rem 1.5rem 2rem 1.5rem;
+    color:var(--text-dim); font-size:.8rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="a11y-bar">
+  <span class="brand-mini">ACCESS4ALL</span>
+  <span class="spacer"></span>
+  <button class="a11y-btn" id="fontDown" aria-label="Decrease text size">A−</button>
+  <button class="a11y-btn" id="fontUp" aria-label="Increase text size">A+</button>
+  <button class="a11y-btn" id="contrastToggle" aria-label="Toggle high contrast">High contrast</button>
+</div>
+
+<!-- ============ LANDING ============ -->
+<section id="landing" class="screen active">
+  <div class="hero">
+    <h1>Technology that adapts to you.</h1>
+    <p class="tagline">One platform. Four ways of experiencing the world. Choose the mode that fits how you communicate, and the whole site changes with you.</p>
+  </div>
+
+  <div class="mode-grid">
+    <button class="mode-tile" style="--tile-color:var(--blind)" onclick="showScreen('blind')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <div>
+        <h3>Blind &amp; low vision</h3>
+        <p>Camera description, obstacle warnings, emergency pathways, and a study assistant — all spoken aloud.</p>
+      </div>
+    </button>
+
+    <button class="mode-tile" style="--tile-color:var(--deaf)" onclick="showScreen('deaf')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0v5a2 2 0 0 1-2 2h-1"/><path d="M6 8v6a2 2 0 0 0 2 2h1"/><path d="M9 21c0-1.5 1-2 3-2s3 .5 3 2"/></svg>
+      <div>
+        <h3>Deaf &amp; hard of hearing</h3>
+        <p>Live captions from speech, alarm and emergency-word alerts, and instructions turned into text.</p>
+      </div>
+    </button>
+
+    <button class="mode-tile" style="--tile-color:var(--comm)" onclick="showScreen('comm')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <div>
+        <h3>Non-speaking / communication</h3>
+        <p>Tap a phrase and it speaks for you. Build sentences from a few words, or hold a two-way conversation.</p>
+      </div>
+    </button>
+
+    <button class="mode-tile" style="--tile-color:var(--dys)" onclick="showScreen('dys')">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <div>
+        <h3>Dyslexia &amp; reading support</h3>
+        <p>Simplify dense text, read one sentence at a time, and look up any word instantly.</p>
+      </div>
+    </button>
+  </div>
+
+  <p class="guest-note">No sign-up needed — everything below runs as a guest, right in this browser.</p>
+</section>
+
+<!-- ============ BLIND MODE ============ -->
+<section id="blind" class="screen" style="--mode-color:var(--blind)">
+  <div class="dash-header"><div class="accent-bar"></div>
+    <h2>Blind &amp; low vision mode</h2>
+    <button class="back-btn" onclick="showScreen('landing')">← Change mode</button>
+  </div>
+
+  <div class="panel-grid">
+
+    <div class="panel">
+      <h3><span class="dot"></span>Read text aloud</h3>
+      <textarea id="blindReadText" rows="4" placeholder="Paste or type any text here...">Photosynthesis is the process by which green plants use sunlight to make their own food.</textarea>
+      <br/>
+      <button class="action-btn" onclick="speak(document.getElementById('blindReadText').value, 'blindReadStatus')">🔊 Read aloud</button>
+      <button class="action-btn secondary" onclick="stopSpeaking()">Stop</button>
+      <div class="status-line" id="blindReadStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Scan surroundings</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Uses your camera to capture a frame. Describing what's in the photo needs a vision AI backend — this prototype captures the image and shows where that call would plug in.</p>
+      <video id="blindCam" class="cam-preview" autoplay playsinline></video>
+      <br/>
+      <button class="action-btn" id="blindCamStart" onclick="startCamera('blindCam')">📷 Turn on camera</button>
+      <button class="action-btn secondary" onclick="captureFrame('blindCam','blindScanStatus')">Capture &amp; describe</button>
+      <div class="status-line" id="blindScanStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Study assistant</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Paste a passage. This demo reads it back and pulls out the first sentence as a simple summary line — swap in an LLM call for real simplification.</p>
+      <textarea id="blindStudyText" rows="3" placeholder="Paste your notes or textbook passage..."></textarea>
+      <br/>
+      <button class="action-btn" onclick="studySimplify('blindStudyText','blindStudyOut')">📚 Explain simply</button>
+      <div class="status-line" id="blindStudyOut"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Emergency pathway</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Demo route using a predefined map, as recommended for a 48-hour prototype — no live GPS needed to show the concept.</p>
+      <button class="action-btn" onclick="runEmergencyRoute()">🚨 Emergency — guide me out</button>
+      <div class="status-line" id="blindEmergencyStatus"></div>
+    </div>
+
+  </div>
+  <footer class="note">"Scan surroundings" now calls a real PHP endpoint (<code class="inline">api/describe-image.php</code>) running on your XAMPP server. It currently returns a placeholder sentence — open that file and follow the commented example to connect a real vision AI API.</footer>
+</section>
+
+<!-- ============ DEAF MODE ============ -->
+<section id="deaf" class="screen" style="--mode-color:var(--deaf)">
+  <div class="dash-header"><div class="accent-bar"></div>
+    <h2>Deaf &amp; hard of hearing mode</h2>
+    <button class="back-btn" onclick="showScreen('landing')">← Change mode</button>
+  </div>
+
+  <div class="panel-grid">
+
+    <div class="panel wide">
+      <h3><span class="dot"></span>Live captions (speech → text)</h3>
+      <button class="action-btn" id="deafListenBtn" onclick="toggleDeafListening()">🎤 Start listening</button>
+      <div class="transcript-box" id="deafTranscript" aria-live="polite">Captions will appear here once you start listening.</div>
+      <div class="status-line" id="deafStatus"></div>
+      <div class="emergency-alert" id="deafEmergencyAlert">🚨 Emergency word detected — check your surroundings and head to the nearest exit.</div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Alarm / siren detector</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Listens for a loud, sustained tone in the frequency range typical of sirens and alarms. A simplified prototype detector, not a trained sound classifier.</p>
+      <button class="action-btn" id="sirenBtn" onclick="toggleSirenDetector()">🔊 Start listening for alarms</button>
+      <div class="status-line" id="sirenStatus">Off</div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Turn instructions into a note</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Say a short instruction — it's captured and pinned below so you can glance back at it.</p>
+      <button class="action-btn secondary" onclick="captureInstruction()">📝 Capture spoken instruction</button>
+      <div id="instructionList" style="margin-top:.7rem;display:flex;flex-direction:column;gap:.4rem;"></div>
+    </div>
+
+  </div>
+  <footer class="note">Speech-to-text and the siren detector run entirely in your browser (Web Speech API + Web Audio API) — no server needed for the demo.</footer>
+</section>
+
+<!-- ============ COMMUNICATION MODE ============ -->
+<section id="comm" class="screen" style="--mode-color:var(--comm)">
+  <div class="dash-header"><div class="accent-bar"></div>
+    <h2>Communication mode</h2>
+    <button class="back-btn" onclick="showScreen('landing')">← Change mode</button>
+  </div>
+
+  <div class="panel-grid">
+
+    <div class="panel">
+      <h3><span class="dot"></span>Quick phrases</h3>
+      <div class="phrase-grid">
+        <button class="phrase-btn" onclick="speak('I need help.','commStatus')">🆘 I need help</button>
+        <button class="phrase-btn" onclick="speak('I need water.','commStatus')">💧 I need water</button>
+        <button class="phrase-btn" onclick="speak('I need medical help.','commStatus')">🏥 Medical help</button>
+        <button class="phrase-btn" onclick="speak('Where is the toilet?','commStatus')">🚻 Where's the toilet?</button>
+        <button class="phrase-btn" onclick="speak('Where is the exit?','commStatus')">🚪 Where's the exit?</button>
+        <button class="phrase-btn" onclick="speak('I don\'t understand.','commStatus')">❌ I don't understand</button>
+      </div>
+      <div class="status-line" id="commStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Type → speech</h3>
+      <input type="text" id="commTypeInput" placeholder="Type what you want to say...">
+      <br/><br/>
+      <button class="action-btn" onclick="speak(document.getElementById('commTypeInput').value, 'commTypeStatus')">🔊 Speak it</button>
+      <div class="status-line" id="commTypeStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Sentence builder</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Pick words to stitch together a sentence.</p>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+        <select id="sb1"><option>I need</option><option>I want</option><option>Please bring</option></select>
+        <select id="sb2"><option>help</option><option>water</option><option>food</option><option>a doctor</option></select>
+        <select id="sb3"><option>right now</option><option>in a minute</option><option>at home</option><option>here</option></select>
+      </div>
+      <br/>
+      <button class="action-btn" onclick="buildSentence()">🤖 Build &amp; speak</button>
+      <div class="status-line" id="sbStatus"></div>
+    </div>
+
+    <div class="panel wide">
+      <h3><span class="dot"></span>Two-way conversation</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Type your side; tap listen to capture what the other person says.</p>
+      <button class="action-btn secondary" id="commListenBtn" onclick="toggleCommListening()">🎤 Listen to them</button>
+      <div class="transcript-box" id="commTranscript" aria-live="polite">Their speech will appear here.</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ DYSLEXIA MODE ============ -->
+<section id="dys" class="screen" style="--mode-color:var(--dys)">
+  <div class="dash-header"><div class="accent-bar"></div>
+    <h2>Dyslexia &amp; reading support</h2>
+    <button class="back-btn" onclick="showScreen('landing')">← Change mode</button>
+  </div>
+
+  <div class="panel-grid">
+
+    <div class="panel wide">
+      <h3><span class="dot"></span>Text simplifier</h3>
+      <textarea id="dysInput" rows="3" placeholder="Paste a difficult sentence or paragraph...">Individuals are required to adhere to the prescribed guidelines prior to commencing the examination.</textarea>
+      <br/>
+      <label style="font-size:.85rem;color:var(--text-dim)">Complex ─── Simple</label>
+      <input type="range" id="dysSlider" min="0" max="2" value="1" style="width:100%">
+      <br/>
+      <button class="action-btn" onclick="simplifyText()">🔄 Simplify</button>
+      <div class="panel" style="margin-top:.7rem;background:var(--surface-2)" id="dysOutput">Simplified text will appear here.</div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Focus reading</h3>
+      <textarea id="focusSource" rows="2" placeholder="Paste a paragraph to read one sentence at a time.">The Industrial Revolution began in Britain. Machines changed how products were made. Factories grew quickly across the country.</textarea>
+      <br/>
+      <button class="action-btn secondary" onclick="startFocusReading()">Load</button>
+      <div class="focus-sentence" id="focusSentence">Load a paragraph above to begin.</div>
+      <div class="focus-controls">
+        <button class="action-btn secondary" onclick="focusPrev()">← Back</button>
+        <button class="action-btn" onclick="focusNext()">Next →</button>
+        <button class="action-btn secondary" onclick="speak(currentFocusSentence(),'focusStatus')">🔊 Read this line</button>
+      </div>
+      <div class="status-line" id="focusStatus"></div>
+    </div>
+
+    <div class="panel">
+      <h3><span class="dot"></span>Word lookup</h3>
+      <p style="font-size:.9rem;color:var(--text-dim)">Click any word below to hear it and see a simple meaning.</p>
+      <p id="lookupWords" style="font-size:1.1rem;"></p>
+      <div class="definition-box" id="definitionBox"></div>
+    </div>
+
+  </div>
+  <footer class="note">Word lookup calls the free public dictionaryapi.dev service directly from your browser. The text simplifier calls a real PHP endpoint (<code class="inline">api/simplify.php</code>) on your XAMPP server — open that file to swap the word-list logic for a real AI call.</footer>
+</section>
+
+<script>
+/* ============ Navigation ============ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  stopSpeaking();
+}
+
+/* ============ Accessibility bar ============ */
+let fontScale = 1;
+document.getElementById('fontUp').onclick = ()=>{ fontScale=Math.min(1.6,fontScale+0.1); document.documentElement.style.setProperty('--font-scale',fontScale); };
+document.getElementById('fontDown').onclick = ()=>{ fontScale=Math.max(0.8,fontScale-0.1); document.documentElement.style.setProperty('--font-scale',fontScale); };
+document.getElementById('contrastToggle').onclick = ()=> document.body.classList.toggle('high-contrast');
+
+/* ============ Text to speech ============ */
+function speak(text, statusId){
+  if(!text || !text.trim()){ if(statusId) setStatus(statusId,'Nothing to read.'); return; }
+  if(!('speechSynthesis' in window)){ if(statusId) setStatus(statusId,'Speech synthesis not supported in this browser.'); return; }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.rate = 0.95;
+  if(statusId) setStatus(statusId,'🔊 Speaking...');
+  utter.onend = ()=>{ if(statusId) setStatus(statusId,'Done.'); };
+  window.speechSynthesis.speak(utter);
+}
+function stopSpeaking(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+function setStatus(id, msg){ const el=document.getElementById(id); if(el) el.textContent = msg; }
+
+/* ============ Camera (Blind mode) ============ */
+async function startCamera(videoId){
+  const video = document.getElementById(videoId);
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    video.srcObject = stream;
+  }catch(err){
+    setStatus('blindScanStatus', 'Camera unavailable: ' + err.message);
+  }
+}
+function captureFrame(videoId, statusId){
+  const video = document.getElementById(videoId);
+  if(!video.srcObject){ setStatus(statusId,'Turn on the camera first.'); return; }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video,0,0);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+  setStatus(statusId, 'Analyzing photo...');
+  fetch('api/describe-image.php', {
+    method: 'POST',
+    body: JSON.stringify({ image: dataUrl })
+  })
+  .then(r => r.json())
+  .then(d => { setStatus(statusId, d.description); speak(d.description, statusId); })
+  .catch(err => setStatus(statusId, 'Could not reach the backend (is Apache running in XAMPP?): ' + err.message));
+}
+
+/* ============ Study assistant (calls the same PHP simplifier as Dyslexia mode) ============ */
+function studySimplify(inputId, outputId){
+  const text = document.getElementById(inputId).value.trim();
+  if(!text){ setStatus(outputId,'Paste a passage first.'); return; }
+  setStatus(outputId, 'Thinking...');
+  fetch('api/simplify.php', { method:'POST', body: JSON.stringify({ text, level: 1 }) })
+    .then(r => r.json())
+    .then(d => { const simple = 'In simple words: ' + d.simplified; setStatus(outputId, simple); speak(simple, outputId); })
+    .catch(err => setStatus(outputId, 'Could not reach the backend (is Apache running in XAMPP?): ' + err.message));
+}
+
+/* ============ Emergency route (predefined demo) ============ */
+function runEmergencyRoute(){
+  const steps = [
+    'Emergency mode activated.',
+    'Emergency exit is sixty metres ahead.',
+    'Turn left.',
+    'Continue straight for thirty metres.',
+    'Exit is on your right.'
+  ];
+  let i = 0;
+  setStatus('blindEmergencyStatus','Guiding...');
+  const next = ()=>{
+    if(i >= steps.length){ setStatus('blindEmergencyStatus','Route complete.'); return; }
+    const u = new SpeechSynthesisUtterance(steps[i]);
+    u.onend = next;
+    window.speechSynthesis.speak(u);
+    i++;
+  };
+  window.speechSynthesis.cancel();
+  next();
+}
+
+/* ============ Speech recognition (Deaf mode captions) ============ */
+const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+let deafRecognizer = null;
+let deafListening = false;
+const EMERGENCY_WORDS = ['fire','evacuate','emergency','run','help'];
+
+function toggleDeafListening(){
+  if(!SpeechRecognitionAPI){ setStatus('deafStatus','Speech recognition not supported in this browser (try Chrome).'); return; }
+  const btn = document.getElementById('deafListenBtn');
+  if(deafListening){
+    deafRecognizer.stop();
+    deafListening = false;
+    btn.textContent = '🎤 Start listening';
+    setStatus('deafStatus','Stopped.');
+    return;
+  }
+  deafRecognizer = new SpeechRecognitionAPI();
+  deafRecognizer.continuous = true;
+  deafRecognizer.interimResults = true;
+  deafRecognizer.lang = 'en-US';
+  const box = document.getElementById('deafTranscript');
+  box.textContent = '';
+  deafRecognizer.onresult = (event)=>{
+    let finalText = '';
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      finalText += event.results[i][0].transcript;
+    }
+    box.textContent = finalText;
+    const lower = finalText.toLowerCase();
+    if(EMERGENCY_WORDS.some(w=>lower.includes(w))){
+      document.getElementById('deafEmergencyAlert').classList.add('show');
+      if(navigator.vibrate) navigator.vibrate([300,100,300,100,300]);
+    }
+  };
+  deafRecognizer.onerror = (e)=> setStatus('deafStatus','Error: '+e.error);
+  deafRecognizer.onend = ()=>{ if(deafListening){ deafRecognizer.start(); } };
+  deafRecognizer.start();
+  deafListening = true;
+  btn.textContent = '⏹ Stop listening';
+  setStatus('deafStatus','Listening...');
+  document.getElementById('deafEmergencyAlert').classList.remove('show');
+}
+
+function captureInstruction(){
+  if(!SpeechRecognitionAPI){ alert('Speech recognition not supported in this browser (try Chrome).'); return; }
+  const rec = new SpeechRecognitionAPI();
+  rec.lang = 'en-US';
+  rec.onresult = (e)=>{
+    const text = e.results[0][0].transcript;
+    const item = document.createElement('div');
+    item.style.cssText = 'background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:.5rem .7rem;font-size:.95rem;';
+    item.textContent = '📝 ' + text;
+    document.getElementById('instructionList').prepend(item);
+  };
+  rec.start();
+}
+
+/* ============ Siren / alarm detector (simplified heuristic, Web Audio) ============ */
+let sirenListening = false, sirenAudioCtx=null, sirenStream=null, sirenAnalyser=null, sirenRAF=null;
+async function toggleSirenDetector(){
+  const btn = document.getElementById('sirenBtn');
+  if(sirenListening){
+    sirenListening = false;
+    if(sirenRAF) cancelAnimationFrame(sirenRAF);
+    if(sirenStream) sirenStream.getTracks().forEach(t=>t.stop());
+    if(sirenAudioCtx) sirenAudioCtx.close();
+    btn.textContent = '🔊 Start listening for alarms';
+    setStatus2('sirenStatus','Off');
+    return;
+  }
+  try{
+    sirenStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  }catch(err){ setStatus2('sirenStatus','Microphone unavailable: '+err.message); return; }
+  sirenAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  const source = sirenAudioCtx.createMediaStreamSource(sirenStream);
+  sirenAnalyser = sirenAudioCtx.createAnalyser();
+  sirenAnalyser.fftSize = 2048;
+  source.connect(sirenAnalyser);
+  const data = new Uint8Array(sirenAnalyser.frequencyBinCount);
+  const sampleRate = sirenAudioCtx.sampleRate;
+  let loudFrames = 0;
+  sirenListening = true;
+  btn.textContent = '⏹ Stop listening';
+  setStatus2('sirenStatus','Listening for a sustained 500–1500Hz tone...');
+
+  function loop(){
+    if(!sirenListening) return;
+    sirenAnalyser.getByteFrequencyData(data);
+    const binHz = sampleRate / sirenAnalyser.fftSize;
+    const lowBin = Math.floor(500/binHz), highBin = Math.ceil(1500/binHz);
+    let peak = 0, peakBin = lowBin;
+    for(let i=lowBin;i<=highBin && i<data.length;i++){ if(data[i]>peak){ peak=data[i]; peakBin=i; } }
+    if(peak > 180){
+      loudFrames++;
+      if(loudFrames > 15){
+        document.getElementById('sirenStatus').textContent = '🔥 Possible alarm detected!';
+        if(navigator.vibrate) navigator.vibrate([400,150,400]);
+      }
+    } else {
+      loudFrames = Math.max(0, loudFrames-1);
+      if(loudFrames === 0) setStatus2('sirenStatus','Listening...');
+    }
+    sirenRAF = requestAnimationFrame(loop);
+  }
+  loop();
+}
+function setStatus2(id,msg){ document.getElementById(id).textContent = msg; }
+
+/* ============ Communication mode ============ */
+function buildSentence(){
+  const s = document.getElementById('sb1').value + ' ' + document.getElementById('sb2').value + ' ' + document.getElementById('sb3').value + '.';
+  setStatus('sbStatus', s);
+  speak(s, 'sbStatus');
+}
+let commRecognizer=null, commListening=false;
+function toggleCommListening(){
+  if(!SpeechRecognitionAPI){ setStatus('commStatus','Speech recognition not supported in this browser.'); return; }
+  const btn = document.getElementById('commListenBtn');
+  if(commListening){
+    commRecognizer.stop(); commListening=false; btn.textContent='🎤 Listen to them'; return;
+  }
+  commRecognizer = new SpeechRecognitionAPI();
+  commRecognizer.continuous = true; commRecognizer.interimResults = true; commRecognizer.lang='en-US';
+  const box = document.getElementById('commTranscript');
+  commRecognizer.onresult = (e)=>{
+    let t=''; for(let i=e.resultIndex;i<e.results.length;i++) t += e.results[i][0].transcript;
+    box.textContent = t;
+  };
+  commRecognizer.onend = ()=>{ if(commListening) commRecognizer.start(); };
+  commRecognizer.start(); commListening = true; btn.textContent = '⏹ Stop';
+}
+
+/* ============ Dyslexia: text simplifier (calls the PHP backend) ============ */
+function simplifyText(){
+  const text = document.getElementById('dysInput').value;
+  const level = parseInt(document.getElementById('dysSlider').value, 10); // 0=slight,1=medium,2=max
+  const out = document.getElementById('dysOutput');
+  out.textContent = 'Simplifying...';
+  fetch('api/simplify.php', { method:'POST', body: JSON.stringify({ text, level }) })
+    .then(r => r.json())
+    .then(d => { out.textContent = d.simplified; })
+    .catch(err => { out.textContent = 'Could not reach the backend (is Apache running in XAMPP?): ' + err.message; });
+}
+
+/* ============ Dyslexia: focus reading ============ */
+let focusSentences = [], focusIndex = 0;
+function startFocusReading(){
+  const raw = document.getElementById('focusSource').value.trim();
+  focusSentences = raw.split(/(?<=[.!?])\s+/).filter(s=>s.trim().length>0);
+  focusIndex = 0;
+  renderFocus();
+}
+function renderFocus(){
+  const el = document.getElementById('focusSentence');
+  if(focusSentences.length === 0){ el.textContent = 'Load a paragraph above to begin.'; return; }
+  el.textContent = focusSentences[focusIndex];
+}
+function focusNext(){ if(focusIndex < focusSentences.length-1){ focusIndex++; renderFocus(); } }
+function focusPrev(){ if(focusIndex > 0){ focusIndex--; renderFocus(); } }
+function currentFocusSentence(){ return focusSentences[focusIndex] || ''; }
+
+/* ============ Dyslexia: word lookup via free dictionary API ============ */
+const LOOKUP_SAMPLE = ['Democracy','Photosynthesis','Ecosystem','Revolution','Gravity','Economy'];
+function renderLookupWords(){
+  const p = document.getElementById('lookupWords');
+  p.innerHTML = '';
+  LOOKUP_SAMPLE.forEach(w=>{
+    const span = document.createElement('span');
+    span.className = 'word';
+    span.textContent = w;
+    span.style.marginRight = '1.2rem';
+    span.onclick = ()=> lookupWord(w);
+    p.appendChild(span);
+  });
+}
+async function lookupWord(word){
+  const box = document.getElementById('definitionBox');
+  box.classList.add('show');
+  box.textContent = 'Looking up "' + word + '"...';
+  speak(word);
+  try{
+    const res = await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word));
+    if(!res.ok) throw new Error('not found');
+    const data = await res.json();
+    const meaning = data[0]?.meanings?.[0]?.definitions?.[0]?.definition || 'No simple definition found.';
+    box.textContent = word + ': ' + meaning;
+  }catch(err){
+    box.textContent = 'Could not fetch a definition for "' + word + '" right now.';
+  }
+}
+renderLookupWords();
+</script>
+</body>
+</html>
