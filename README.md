@@ -49,6 +49,3 @@ Working right now, no backend needed:
 
 To make it fully AI-powered, open `api/simplify.php` and `api/describe-image.php` — each has a commented, ready-to-uncomment example of calling the Anthropic API with your own key.
 
-## Pushing this to GitHub
-
-See the step-by-step walkthrough in the chat. Never commit a real API key — put it in a `config.php` or `.env` file, which `.gitignore` already excludes.
